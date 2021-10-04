@@ -1,3 +1,5 @@
+import time
+
 from blessed import Terminal
 from blessed.formatters import FormattingString
 
@@ -32,9 +34,12 @@ class Typer:
         self._printCenterMessage()
         # print(self.term.center(text="Press any key to start"))
 
-    def _endScreen(self):
+    def _endScreen(self, duration):
         self._printCenterMessage()
-        print(self.term.center("Done! Press q to quit"))
+
+        wpm = (len(self.phrase) / 5) / (duration / 60)  # verify formula
+
+        print(self.term.center(f"WPM: {wpm}. Press q to quit"))
 
         if self.term.inkey() == "q":
             print(self.term.exit_fullscreen + self.term.clear)
@@ -46,13 +51,15 @@ class Typer:
         with self.term.cbreak(), self.term.hidden_cursor():
 
             char_idx = 0
-            print(self.term.center("|" + self.phrase))
+            print(self.term.center(self.phrase))
+
+            startTime = time.time()  # todo: only start timer when first key is pressed
 
             while char_idx < len(self.letters):
                 keypress = self.term.inkey(timeout=0.5)
                 char = self.letters[char_idx]
 
-                if keypress.code == 361: # quit gracefully with Esc
+                if keypress.code == 361:  # quit gracefully with Esc
                     print(self.term.exit_fullscreen)
 
                 if keypress and not keypress.is_sequence:
@@ -70,8 +77,9 @@ class Typer:
                 else:
                     continue
 
-            # finish screen
-            self._endScreen()
+            endTime = time.time()
+            duration = endTime - startTime
+            self._endScreen(duration)
 
 
 def main():
