@@ -1,4 +1,3 @@
-from typing import List
 from blessed import Terminal
 from blessed.formatters import FormattingString
 
@@ -31,30 +30,33 @@ class Typer:
 
     def _startScreen(self):
         self._printCenterMessage()
+        # print(self.term.center(text="Press any key to start"))
 
     def _endScreen(self):
         self._printCenterMessage()
-        print(self.term.center("Done!"))
+        print(self.term.center("Done! Press q to quit"))
 
-        # on any key, exit
-
-        print(self.term.exit_fullscreen)
+        if self.term.inkey() == "q":
+            print(self.term.exit_fullscreen + self.term.clear)
 
     def start(self):
 
-        # on any key, start
         self._startScreen()
 
         with self.term.cbreak(), self.term.hidden_cursor():
 
             char_idx = 0
-            print(self.term.center(text=self.phrase))
+            print(self.term.center("|" + self.phrase))
 
             while char_idx < len(self.letters):
                 keypress = self.term.inkey(timeout=0.5)
                 char = self.letters[char_idx]
 
-                if keypress:
+                if keypress.code == 361: # quit gracefully with Esc
+                    print(self.term.exit_fullscreen)
+
+                if keypress and not keypress.is_sequence:
+
                     if keypress == char:
                         self.output[char_idx] = self._colorChar(char, True)
                     else:
@@ -73,7 +75,7 @@ class Typer:
 
 
 def main():
-    phrase = "hello world from america"
+    phrase = "hello world, how are you doing"
     term = Terminal()
     typer = Typer(phrase, term)
     typer.start()
