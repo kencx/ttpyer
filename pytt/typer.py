@@ -1,8 +1,7 @@
-from typing import List
 from blessed import Terminal
-from blessed.formatters import FormattingString
 
 from colors import Color
+from modes import RandomWordMode
 
 
 class Typer:
@@ -10,11 +9,11 @@ class Typer:
     term = Terminal()
     color = Color()
 
-    def __init__(self, phrase: str) -> None:
-        self.phrase = phrase
+    def __init__(self, mode: RandomWordMode) -> None:
+        self.phrase = mode.words
 
-        # appended empty string allows cursor to be moved to the last character
-        self.letters = [char for char in phrase] + [""]
+        # appended empty string allows cursor to be moved to the last character (temp workaround)
+        self.letters = [char for char in self.phrase] + [""]
         self.cursor_pos = 0
         self.input = []
 
@@ -104,9 +103,7 @@ class Typer:
 
 
 def main():
-
-    phrase = "hello world, how are you doing"
-    typer = Typer(phrase)
+    typer = Typer(RandomWordMode())
     typer.start()
 
 
