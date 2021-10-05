@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "type"
+name = "pytt"
 version = "0.1.0"
 description = ""
 authors = ["kennethcheo <kennethcheo1@gmail.com>"]

@@ -1,91 +1,112 @@
-import time
-
+from typing import List
 from blessed import Terminal
 from blessed.formatters import FormattingString
 
+from colors import Color
+
 
 class Typer:
-    def __init__(self, phrase: str, term: Terminal) -> None:
 
-        self.term = term
-        self.line_length = 70  # for paragraphs
+    term = Terminal()
+    color = Color()
 
+    def __init__(self, phrase: str) -> None:
         self.phrase = phrase
-        self.letters = [char for char in phrase]
-        self.output = self.letters.copy()
 
-        self.GREEN = FormattingString(self.term.green, self.term.normal)
-        self.RED = FormattingString(self.term.red, self.term.normal)
+        # appended empty string allows cursor to be moved to the last character
+        self.letters = [char for char in phrase] + [""]
+        self.cursor_pos = 0
+        self.input = []
 
-    def _printCenterMessage(self):
+        self.output = [self.color.GRAY(c) for c in self.letters.copy()]
+        self.output[self.cursor_pos] = self.color.BLACK_ON_WHITE(self.cursor_char)
+
+    @property
+    def cursor_char(self) -> str:
+        return self.letters[self.cursor_pos]
+
+    def update_current_pos(self, new_char) -> None:
+        self.output[self.cursor_pos] = new_char
+
+    def _parse_output(self) -> str:
+        return "".join(self.output)
+
+    def _print_center_message(self) -> None:
         print(
             self.term.enter_fullscreen
             + self.term.clear
             + self.term.move_y(self.term.height // 2)
         )
 
-    def _colorChar(self, char, choice):
-        return self.GREEN(char) if choice else self.RED(char)
+    def move_cursor_left(self) -> None:
+        if self.cursor_pos > 0:
+            self.cursor_pos -= 1
+            self.update_current_pos(self.color.BLACK_ON_WHITE(self.cursor_char))
 
-    def _parseOutput(self):
-        return "".join(self.output)
+    def move_cursor_right(self) -> None:
+        self.cursor_pos += 1
 
-    def _startScreen(self):
-        self._printCenterMessage()
+        if self.cursor_pos < len(self.letters) - 1:
+            self.update_current_pos(self.color.BLACK_ON_WHITE(self.cursor_char))
+
+    def type_char(self, keypress) -> None:
+        self.input.append(keypress)  # for getting wrong chars
+
+        current_pos = self.term.strip_seqs(self.output[self.cursor_pos])
+
+        if keypress == current_pos:
+            current_pos = self.color.WHITE(current_pos)
+        else:
+            current_pos = self.color.RED_REVERSE(current_pos)
+
+        self.update_current_pos(current_pos)
+
+    def startScreen(self):
+        self._print_center_message()
         # print(self.term.center(text="Press any key to start"))
 
-    def _endScreen(self, duration):
-        self._printCenterMessage()
+    def endScreen(self):
+        self._print_center_message()
 
-        wpm = (len(self.phrase) / 5) / (duration / 60)  # verify formula
-
-        print(self.term.center(f"WPM: {wpm}. Press q to quit"))
+        print(self.term.center("Press q to quit"))
 
         if self.term.inkey() == "q":
-            print(self.term.exit_fullscreen + self.term.clear)
+            self.end()
 
-    def start(self):
+    def end(self):
+        print(self.term.exit_fullscreen + self.term.clear)
+        exit()
 
-        self._startScreen()
+    def start(self) -> None:
 
         with self.term.cbreak(), self.term.hidden_cursor():
 
-            char_idx = 0
-            print(self.term.center(self.phrase))
+            self.startScreen()
+            print(self.term.center(self._parse_output()))
 
-            startTime = time.time()  # todo: only start timer when first key is pressed
+            while self.cursor_pos < len(self.letters) - 1:
+                keypress = self.term.inkey(timeout=0.05)
 
-            while char_idx < len(self.letters):
-                keypress = self.term.inkey(timeout=0.5)
-                char = self.letters[char_idx]
-
-                if keypress.code == 361:  # quit gracefully with Esc
-                    print(self.term.exit_fullscreen)
+                if keypress.name == "KEY_ESCAPE":  # quit gracefully with Esc
+                    self.end()
 
                 if keypress and not keypress.is_sequence:
-
-                    if keypress == char:
-                        self.output[char_idx] = self._colorChar(char, True)
-                    else:
-                        self.output[char_idx] = self._colorChar(char, False)
-
-                    char_idx += 1
+                    self.type_char(keypress)
+                    self.move_cursor_right()
 
                     print(self.term.move_y(self.term.height // 2))
-                    print(self.term.center(text=self._parseOutput()))
+                    print(self.term.center(self._parse_output()))
 
                 else:
                     continue
 
-            endTime = time.time()
-            duration = endTime - startTime
-            self._endScreen(duration)
+            self.endScreen()
 
 
 def main():
+
     phrase = "hello world, how are you doing"
-    term = Terminal()
-    typer = Typer(phrase, term)
+    typer = Typer(phrase)
     typer.start()
 
 
