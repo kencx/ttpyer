@@ -1,8 +1,8 @@
 import sys
 import argparse
 
-from pytt.typer import Typer
-from pytt.modes import RandomWordMode, TimedMode
+from pytt import Typer
+from pytt import RandomWordMode, TimedMode
 
 
 def number_check(n):
@@ -33,15 +33,10 @@ def cli(args=None):
     parser.add_argument("--quote", action="store_true", help="enable quote mode")
     parser.add_argument("-c", "--controls", action="store_true", help="show controls")
 
-    # display help when no arguments given
-    if len(sys.argv) == 1:
-        parser.print_help(sys.stderr)
-        sys.exit(1)
-
     return parser.parse_args(args)
 
 
-def main():
+def run():
     parser = cli(sys.argv[1:])
 
     if parser.controls:
@@ -55,7 +50,3 @@ def main():
         pass
         # typer = Typer(TimedMode())
         # typer.start()
-
-
-if __name__ == "__main__":
-    main()

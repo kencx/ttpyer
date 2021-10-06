@@ -2,7 +2,7 @@ import sys
 import argparse
 import pytest
 
-from pytt.parser import cli
+from pytt import cli
 
 
 class TestParser:

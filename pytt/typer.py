@@ -1,8 +1,8 @@
 import sys
 from blessed import Terminal
 
-from pytt.colors import Color
-from pytt.modes import Mode, RandomWordMode, TimedMode
+from pytt import Color
+from pytt import Mode, RandomWordMode, TimedMode
 
 
 class Typer:
