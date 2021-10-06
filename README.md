@@ -1,10 +1,9 @@
 # pytt
 A terminal based typing test written in Python.
 
-Built with [blessed](https://github.com/jquast/blessed).
 
 ## Todo
-- Gradient colors instead of just red and green
+- Gradient colors
 - Start and end screen with key bindings
 - Timer
 - Word accuracy, speed

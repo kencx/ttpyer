@@ -1,8 +1,8 @@
 import sys
 from blessed import Terminal
 
-from colors import Color
-from modes import Mode, RandomWordMode
+from pytt.colors import Color
+from pytt.modes import Mode, RandomWordMode, TimedMode
 
 
 class Typer:
@@ -11,6 +11,7 @@ class Typer:
     color = Color()
 
     def __init__(self, mode: Mode) -> None:
+
         self.words = mode.words
 
         # appended empty string allows cursor to be moved to the last character (temp workaround)
@@ -20,6 +21,11 @@ class Typer:
 
         self.output = [self.color.GRAY(c) for c in self.letters.copy()]
         self.output[self.cursor_pos] = self.color.BLACK_ON_WHITE(self.cursor_char)
+
+        if isinstance(mode, TimedMode):
+            self.show_timer = True
+        else:
+            self.show_timer = False
 
     @property
     def cursor_char(self) -> str:
