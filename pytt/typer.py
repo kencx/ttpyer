@@ -1,7 +1,8 @@
+import sys
 from blessed import Terminal
 
 from colors import Color
-from modes import RandomWordMode
+from modes import Mode, RandomWordMode
 
 
 class Typer:
@@ -9,11 +10,11 @@ class Typer:
     term = Terminal()
     color = Color()
 
-    def __init__(self, mode: RandomWordMode) -> None:
-        self.phrase = mode.words
+    def __init__(self, mode: Mode) -> None:
+        self.words = mode.words
 
         # appended empty string allows cursor to be moved to the last character (temp workaround)
-        self.letters = [char for char in self.phrase] + [""]
+        self.letters = [char for char in self.words] + [""]
         self.cursor_pos = 0
         self.input = []
 
@@ -60,26 +61,25 @@ class Typer:
 
         self.update_current_pos(current_pos)
 
-    def startScreen(self):
+    def startScreen(self) -> None:
         self._print_center_message()
         # print(self.term.center(text="Press any key to start"))
 
-    def endScreen(self):
+    def endScreen(self) -> None:
         self._print_center_message()
 
         print(self.term.center("Press q to quit"))
 
         if self.term.inkey() == "q":
-            self.end()
+            self.shutdown()
 
-    def end(self):
+    def shutdown(self):
         print(self.term.exit_fullscreen + self.term.clear)
-        exit()
+        sys.exit()
 
     def start(self) -> None:
 
         with self.term.cbreak(), self.term.hidden_cursor():
-
             self.startScreen()
             print(self.term.center(self._parse_output()))
 
@@ -87,7 +87,7 @@ class Typer:
                 keypress = self.term.inkey(timeout=0.05)
 
                 if keypress.name == "KEY_ESCAPE":  # quit gracefully with Esc
-                    self.end()
+                    self.shutdown()
 
                 if keypress and not keypress.is_sequence:
                     self.type_char(keypress)
