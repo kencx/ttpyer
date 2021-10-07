@@ -15,6 +15,18 @@ logger = logging.getLogger(__name__)
 
 
 class Typer:
+
+    """Typing function that runs the main event loop
+
+    mode (Mode): Test mode
+    words (List[str]): List of words
+    show_timer (bool): Show timer if timed mode
+    palette (List[(name, fg, bg]): Defines colors/theme for widgets
+    word_widget (WordWidget): Main widget that draws the given words
+    fill (Filler): Wraps word_widget to fill console
+    loop (MainLoop): Main event loop to be ran with given widgets, palette and input_filter
+    """
+
     def __init__(self, mode: Mode) -> None:
         self.mode = mode
         self.words = mode.words
