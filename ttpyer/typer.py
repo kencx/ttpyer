@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 class Typer:
     def __init__(self, mode: Mode) -> None:
+        self.mode = mode
         self.words = mode.words
         self.show_timer = isinstance(mode, TimedMode)
 
@@ -23,38 +24,39 @@ class Typer:
             ("dimmed", "dark gray", ""),
             ("cursor", "black", "white"),
             ("correct", "white", ""),
-            ("wrong", "light red,standout", ""),
+            ("wrong", "light red, standout", ""),
         ]
 
         self.word_widget = WordWidget(self.words)
         self.fill = Filler(self.word_widget)
+        self.loop = MainLoop(
+            self.fill, palette=self.palette, input_filter=self.input_filter
+        )
 
-    def restart(self, key):
-        """Restart test if user presses Tab"""
-        if key == "tab":
-            pass
+    def reset(self) -> None:
+        new_mode = self.mode.__class__
+        self.word_widget = WordWidget(
+            new_mode().sample_words(self.mode.limit)
+        )  # swap out with resample_words()
 
-    def shutdown(self, key):
-        """Exit if user presses Esc"""
-        if key == "esc":
+        self.fill = Filler(self.word_widget)
+        self.loop.widget = self.fill
+
+    def input_filter(self, keys, raw):
+        if "esc" in keys:
             raise ExitMainLoop()
 
-    def start(self) -> None:
+        if "tab" in keys:
+            self.reset()
 
+        return keys
+
+    def start(self) -> None:
         try:
-            loop = MainLoop(
-                self.fill, palette=self.palette, unhandled_input=self.shutdown
-            )
-            loop.run()
+            self.loop.run()
 
         except BaseException as e:
             logger.error(e, exc_info=True)
-
-    # def startScreen(self) -> None:
-    #      pass
-
-    # def endScreen(self) -> None:
-    #     print(self.term.center("Press q to quit"))
 
 
 if __name__ == "__main__":

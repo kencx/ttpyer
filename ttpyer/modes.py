@@ -22,6 +22,9 @@ class Mode:
         except ValueError as e:
             raise ValueError("Limit exceeded number of available words.") from e
 
+    def resample_words(self) -> str:  # TODO: need to test
+        self.words = self.sample_words(self.limit)
+
 
 class RandomWordMode(Mode):
     def __init__(self, filename="words/english1000.json", limit=10):
