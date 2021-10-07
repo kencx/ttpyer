@@ -1,31 +1,57 @@
-import sys
+import logging
 
-from urwid import MainLoop, Text, Padding, Filler
+from urwid import MainLoop, Text, Filler, WidgetWrap
 from urwid.main_loop import ExitMainLoop
 
-from ttpyer import Color
 from ttpyer import Mode, RandomWordMode, TimedMode
+
+logging.basicConfig(
+    filename="log.txt",
+    level=logging.ERROR,
+    format="%(asctime)s %(levelname)s %(name)s %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+
+# custom widget wrapping
+# https://stackoverflow.com/questions/49241164/preferred-method-to-dynamically-change-the-urwid-mainloop-widget
+class WordWidget(WidgetWrap):
+    def __init__(self, initial_text):
+        self.text = initial_text
+
+        self.text_widget = Text(self.text, align="center")
+        super(WordWidget, self).__init__(self.text_widget)
+
+    def update(self, new_text):
+        self.text_widget.set_text(new_text)
 
 
 class Typer:
-
-    color = Color()
-
     def __init__(self, mode: Mode) -> None:
-
-        self.show_timer = isinstance(mode, TimedMode)
-        self.palette = [("dim", "dark gray", ""), ("cursor", "black", "white")]
         self.words = mode.words
+        self.show_timer = isinstance(mode, TimedMode)
+
+        self.palette = [
+            ("dimmed", "dark gray", ""),
+            ("cursor", "black", "white"),
+            ("correct", "white", ""),
+            ("wrong", "light red,standout", ""),
+        ]
 
         # appended empty string allows cursor to be moved to the last character (temp workaround)
         self.letters = [char for char in self.words] + [""]
         self.cursor_pos = 0
         self.input = []
 
+        # attr wrapping
+        # consider implementing custom widget https://stackoverflow.com/questions/46876041/parts-of-text-in-bold-in-urwid
         self.output = []
         for c in self.letters.copy():
-            self.output.append(("dim", u"%s" % c))
+            self.output.append(("dimmed", u"%s" % c))
         self.output[self.cursor_pos] = ("cursor", u"%s" % self.cursor_char)
+
+        self.word_widget = WordWidget(self.output)
+        self.typing_widget = Filler(self.word_widget)
 
     @property
     def cursor_char(self) -> str:
@@ -34,26 +60,16 @@ class Typer:
     def update_current_pos(self, new_char) -> None:
         self.output[self.cursor_pos] = new_char
 
-    # def _parse_output(self) -> str:
-    #     return "".join(self.output)
-
-    def _print_center_message(self) -> None:
-        print(
-            self.term.enter_fullscreen
-            + self.term.clear
-            + self.term.move_y(self.term.height // 2)
-        )
-
     def move_cursor_left(self) -> None:
         if self.cursor_pos > 0:
             self.cursor_pos -= 1
-            self.update_current_pos(self.color.BLACK_ON_WHITE(self.cursor_char))
+            self.update_current_pos(("cursor", u"%s" % self.cursor_char))
 
     def move_cursor_right(self) -> None:
         self.cursor_pos += 1
 
         if self.cursor_pos < len(self.letters) - 1:
-            self.update_current_pos(self.color.BLACK_ON_WHITE(self.cursor_char))
+            self.update_current_pos(("cursor", u"%s" % self.cursor_char))
 
     def type_char(self, keypress) -> None:
         self.input.append(keypress)  # for getting wrong chars
@@ -61,19 +77,17 @@ class Typer:
         current_pos = self.term.strip_seqs(self.output[self.cursor_pos])
 
         if keypress == current_pos:
-            current_pos = self.color.WHITE(current_pos)
+            current_pos = ("correct", u"%s" % current_pos)
         else:
-            current_pos = self.color.RED_REVERSE(current_pos)
+            current_pos = ("wrong", u"%s" % current_pos)
 
         self.update_current_pos(current_pos)
 
     def startScreen(self) -> None:
-        self._print_center_message()
+        pass
         # print(self.term.center(text="Press any key to start"))
 
     def endScreen(self) -> None:
-        self._print_center_message()
-
         print(self.term.center("Press q to quit"))
 
         if self.term.inkey() == "q":
@@ -91,18 +105,16 @@ class Typer:
 
     def start(self) -> None:
 
-        text = Text(self.output, align="center")
-        fill = Filler(text)
-        loop = MainLoop(fill, palette=self.palette, unhandled_input=self.shutdown)
-        loop.run()
+        try:
+            loop = MainLoop(
+                self.typing_widget, palette=self.palette, unhandled_input=self.shutdown
+            )
+            loop.run()
 
-        #     self.startScreen()
-
+        except BaseException as e:
+            logger.error(e)
         #     while self.cursor_pos < len(self.letters) - 1:
         #         keypress = self.term.inkey(timeout=0.05)
-
-        #         if keypress.name == "KEY_ESCAPE":  # quit gracefully with Esc
-        #             self.shutdown()
 
         #         if keypress and not keypress.is_sequence:
         #             self.type_char(keypress)
