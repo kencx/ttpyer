@@ -11,6 +11,7 @@ keywords = ["terminal", "typingtest"]
 python = "^3.8"
 black = "^21.9b0"
 blessed = "^1.19.0"
+urwid = "^2.1.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

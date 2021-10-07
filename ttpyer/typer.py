@@ -1,5 +1,7 @@
 import sys
-from blessed import Terminal
+
+from urwid import MainLoop, Text, Padding, Filler
+from urwid.main_loop import ExitMainLoop
 
 from ttpyer import Color
 from ttpyer import Mode, RandomWordMode, TimedMode
@@ -7,11 +9,12 @@ from ttpyer import Mode, RandomWordMode, TimedMode
 
 class Typer:
 
-    term = Terminal()
     color = Color()
 
     def __init__(self, mode: Mode) -> None:
 
+        self.show_timer = isinstance(mode, TimedMode)
+        self.palette = [("dim", "dark gray", ""), ("cursor", "black", "white")]
         self.words = mode.words
 
         # appended empty string allows cursor to be moved to the last character (temp workaround)
@@ -19,13 +22,10 @@ class Typer:
         self.cursor_pos = 0
         self.input = []
 
-        self.output = [self.color.GRAY(c) for c in self.letters.copy()]
-        self.output[self.cursor_pos] = self.color.BLACK_ON_WHITE(self.cursor_char)
-
-        if isinstance(mode, TimedMode):
-            self.show_timer = True
-        else:
-            self.show_timer = False
+        self.output = []
+        for c in self.letters.copy():
+            self.output.append(("dim", u"%s" % c))
+        self.output[self.cursor_pos] = ("cursor", u"%s" % self.cursor_char)
 
     @property
     def cursor_char(self) -> str:
@@ -34,8 +34,8 @@ class Typer:
     def update_current_pos(self, new_char) -> None:
         self.output[self.cursor_pos] = new_char
 
-    def _parse_output(self) -> str:
-        return "".join(self.output)
+    # def _parse_output(self) -> str:
+    #     return "".join(self.output)
 
     def _print_center_message(self) -> None:
         print(
@@ -79,33 +79,42 @@ class Typer:
         if self.term.inkey() == "q":
             self.shutdown()
 
-    def shutdown(self):
-        print(self.term.exit_fullscreen + self.term.clear)
-        sys.exit()
+    def restart(self, key):
+        """Restart test if user presses Tab"""
+        if key in ("tab"):
+            pass
+
+    def shutdown(self, key):
+        """Exit if user presses Esc"""
+        if key in ("esc"):
+            raise ExitMainLoop()
 
     def start(self) -> None:
 
-        with self.term.cbreak(), self.term.hidden_cursor():
-            self.startScreen()
-            print(self.term.center(self._parse_output()))
+        text = Text(self.output, align="center")
+        fill = Filler(text)
+        loop = MainLoop(fill, palette=self.palette, unhandled_input=self.shutdown)
+        loop.run()
 
-            while self.cursor_pos < len(self.letters) - 1:
-                keypress = self.term.inkey(timeout=0.05)
+        #     self.startScreen()
 
-                if keypress.name == "KEY_ESCAPE":  # quit gracefully with Esc
-                    self.shutdown()
+        #     while self.cursor_pos < len(self.letters) - 1:
+        #         keypress = self.term.inkey(timeout=0.05)
 
-                if keypress and not keypress.is_sequence:
-                    self.type_char(keypress)
-                    self.move_cursor_right()
+        #         if keypress.name == "KEY_ESCAPE":  # quit gracefully with Esc
+        #             self.shutdown()
 
-                    print(self.term.move_y(self.term.height // 2))
-                    print(self.term.center(self._parse_output()))
+        #         if keypress and not keypress.is_sequence:
+        #             self.type_char(keypress)
+        #             self.move_cursor_right()
 
-                else:
-                    continue
+        #             print(self.term.move_y(self.term.height // 2))
+        #             print(self.term.center(self._parse_output()))
 
-            self.endScreen()
+        #         else:
+        #             continue
+
+        #     self.endScreen()
 
 
 def main():
