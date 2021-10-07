@@ -1,8 +1,8 @@
 import sys
 import argparse
 
-from pytt import Typer
-from pytt import RandomWordMode, TimedMode
+from ttpyer import Typer
+from ttpyer import RandomWordMode, TimedMode
 
 
 def number_check(n):
@@ -15,7 +15,7 @@ def number_check(n):
 def cli(args=None):
 
     parser = argparse.ArgumentParser(
-        prog="pytt",
+        prog="ttpyer",
         description="A terminal based typing test application written in Python",
     )
 

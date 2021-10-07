@@ -1,4 +1,4 @@
-# pytt
+# ttpyer
 A terminal based typing test written in Python.
 
 

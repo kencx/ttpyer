@@ -2,7 +2,7 @@ import sys
 import argparse
 import pytest
 
-from pytt import cli
+from ttpyer import cli
 
 
 class TestParser:
@@ -19,8 +19,8 @@ class TestParser:
             parser = cli(["-n", "0"])
             assert isinstance(e.__context__, argparse.ArgumentTypeError)
             assert pytest.capsys.readouterr() == (
-                "pytt [-h] [-n NUM] [--quote] [-t TIME] [-c]\n",
-                "pytt: error: Invalid value",
+                "ttpyer [-h] [-n NUM] [--quote] [-t TIME] [-c]\n",
+                "ttpyer: error: Invalid value",
             )
 
     def test_controls_true(self):

@@ -1,6 +1,6 @@
 import pytest
 
-from pytt import Mode, RandomWordMode
+from ttpyer import Mode, RandomWordMode
 
 
 @pytest.fixture
