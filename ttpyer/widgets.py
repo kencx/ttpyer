@@ -68,11 +68,12 @@ class WordWidget(WidgetWrap):
         if self.cursor_pos < len(self.letters) - 2:
             key_map = {"esc": 1, "backspace": 2, "tab": 3}
 
-            if key == "backspace":
-                pass
+            if key == "backspace" and self.cursor_pos > 0:
+                self.delete_char()
+                self.move_cursor_left()
+                self.update(self.output)
 
             if key not in key_map:
-
                 if self.first_key:
                     self.start_time = time.time()
                     self.first_key = False
@@ -81,6 +82,7 @@ class WordWidget(WidgetWrap):
                 self.type_char(key)
                 self.move_cursor_right()
                 self.update(self.output)
+                # TODO: do not end test if last char is wrong
 
         else:
             if self.end_time == 0:  # prevents time from changing
@@ -112,14 +114,21 @@ class WordWidget(WidgetWrap):
         """
 
         self.input.append(keypress)  # for getting wrong chars
-        current_pos = self.output[self.cursor_pos][1]
+        current_char = self.output[self.cursor_pos][1]
 
-        if keypress == current_pos:
-            current_pos = ("correct", "%s" % current_pos)
+        if keypress == current_char:
+            current_char = ("correct", "%s" % current_char)
         else:
-            current_pos = ("wrong", "%s" % current_pos)
+            current_char = ("wrong", "%s" % current_char)
 
-        self.update_current_pos(current_pos)
+        self.update_current_pos(current_char)
+
+    def delete_char(self) -> None:
+
+        self.input.pop()
+        current_char = self.output[self.cursor_pos][1]
+        current_char = ("dimmed", "%s" % current_char)
+        self.update_current_pos(current_char)
 
     def draw_end_screen(self, key) -> None:
         """Draws the end result screen."""

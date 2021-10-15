@@ -27,7 +27,8 @@ $ ttpyer -q
 
 ## Todo
 - Support for paragraphs (>70 characters)
-- Timer, Word accuracy, speed
+- On screen timer
+- Word accuracy
 - Accept input words from files/stdin
 - Show wrong characters instead of hiding them.
 - Gradient colors, theming
