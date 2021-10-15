@@ -1,4 +1,6 @@
 import logging
+import time
+from inspect import cleandoc
 
 from urwid import Text, WidgetWrap
 from urwid.main_loop import ExitMainLoop
@@ -36,9 +38,13 @@ class WordWidget(WidgetWrap):
         self.cursor_pos = 0
         self.input = []
 
+        self.first_key = True
+        self.start_time = 0
+        self.end_time = 0
+
         # list of chars with attr wrapping -> [("attr", u"word"), ...]
-        self.output = list(map(lambda x: ("dimmed", u"%s" % x), self.letters.copy()))
-        self.output[self.cursor_pos] = ("cursor", u"%s" % self.cursor_char)
+        self.output = list(map(lambda x: ("dimmed", "%s" % x), self.letters.copy()))
+        self.output[self.cursor_pos] = ("cursor", "%s" % self.cursor_char)
 
         self.text_widget = Text(self.output, align="center")
         super(WordWidget, self).__init__(self.text_widget)
@@ -55,9 +61,10 @@ class WordWidget(WidgetWrap):
 
     def keypress(self, size, key) -> None:
         """Handles all user keyboard input.
-        A key map is defined to distinguish between hotkeys and typed characters"""
+        A key map is defined to distinguish between hotkeys and typed characters
+        """
 
-        # -2 allows test to autocomplete when last character is typed
+        # len-2 allows test to autocomplete when last character is typed
         if self.cursor_pos < len(self.letters) - 2:
             key_map = {"esc": 1, "backspace": 2, "tab": 3}
 
@@ -65,12 +72,19 @@ class WordWidget(WidgetWrap):
                 pass
 
             if key not in key_map:
+
+                if self.first_key:
+                    self.start_time = time.time()
+                    self.first_key = False
+
                 logger.debug(key)
                 self.type_char(key)
                 self.move_cursor_right()
                 self.update(self.output)
 
         else:
+            if self.end_time == 0:  # prevents time from changing
+                self.end_time = time.time()
             self.draw_end_screen(key)
 
     def update_current_pos(self, new_char) -> None:
@@ -81,14 +95,14 @@ class WordWidget(WidgetWrap):
         """Move the cursor 1 character to the left"""
         if self.cursor_pos > 0:
             self.cursor_pos -= 1
-            self.update_current_pos(("cursor", u"%s" % self.cursor_char))
+            self.update_current_pos(("cursor", "%s" % self.cursor_char))
 
     def move_cursor_right(self) -> None:
         """Moves the cursor 1 character to the right."""
         self.cursor_pos += 1
 
         if self.cursor_pos < len(self.letters) - 1:
-            self.update_current_pos(("cursor", u"%s" % self.cursor_char))
+            self.update_current_pos(("cursor", "%s" % self.cursor_char))
 
     def type_char(self, keypress) -> None:
         """Colors the current char with the appropriate color, depending on the key input
@@ -101,20 +115,26 @@ class WordWidget(WidgetWrap):
         current_pos = self.output[self.cursor_pos][1]
 
         if keypress == current_pos:
-            current_pos = ("correct", u"%s" % current_pos)
+            current_pos = ("correct", "%s" % current_pos)
         else:
-            current_pos = ("wrong", u"%s" % current_pos)
+            current_pos = ("wrong", "%s" % current_pos)
 
         self.update_current_pos(current_pos)
 
     def draw_end_screen(self, key) -> None:
-        """Draws the end result screen.
-        Will include results such as:
-            - WPM, timing, error rate
-        """
+        """Draws the end result screen."""
+
+        time_taken = self.end_time - self.start_time
+        wpm = (len(self.words) / 5) / (time_taken / 60)
 
         if key == "q":
             raise ExitMainLoop()
 
-        end_screen_text = """Press q to quit"""
-        self.update(end_screen_text)
+        end_screen_text = f"""
+            Time: {time_taken:.2f}s
+            WPM: {wpm:.2f}
+            Accuracy: 0%
+            Press tab to retry
+            Press q to quit
+        """
+        self.update(cleandoc(end_screen_text))
