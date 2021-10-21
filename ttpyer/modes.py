@@ -10,7 +10,7 @@ class Mode:
     words: randomly sampled words from word_bank
     """
 
-    def __init__(self, filename, limit=100):
+    def __init__(self, filename="words/english1000.json", limit=100) -> None:
 
         with open(filename, "r") as f:
             self.word_bank = json.load(f).keys()
@@ -34,18 +34,16 @@ class Mode:
 
 
 class RandomWordMode(Mode):
-    def __init__(self, filename="words/english1000.json", limit=10):
-
-        super().__init__(filename, limit)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
 
 
 class TimedMode(Mode):
-    def __init__(self, filename, time):
-
-        super().__init__(filename)
+    def __init__(self, time, **kwargs) -> None:
+        super().__init__(**kwargs)
         self.time = time
 
 
 class QuoteMode(Mode):
-    def __init__(self, filename):
-        super().__init__(filename)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)

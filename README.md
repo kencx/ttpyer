@@ -1,11 +1,13 @@
 # ttpyer
-A terminal based typing test written in Python. ttpyer is built with [urwid](http://urwid.org/) and argparse.
+A terminal based typing test written in Python.
 
-ttpyer aims to be minimalist and customizable. It draws inspiration from [monkeytype](https://monkeytype.com/) and [tt](https://github.com/lemnos/tt).
+Built with [urwid](http://urwid.org/) and inspired from [monkeytype](https://monkeytype.com/) and [tt](https://github.com/lemnos/tt).
 
-The basic test uses the 1000 most common English words.
+ttpyer aims to have a minimalist and customizable interface.
 
-> ttpyer is a word in progress and my first project
+No Windows support at the moment.
+
+> ttpyer is a work in progress and my first project
 
 ## Usage
 Random word mode with 10 words
@@ -25,10 +27,11 @@ Quote mode
 $ ttpyer -q
 ```
 
-## Todo
+### Todo
 - Support for paragraphs (>70 characters)
 - On screen timer
 - Word accuracy
-- Accept input words from files/stdin
 - Show wrong characters instead of hiding them.
+- Accept input words from files/stdin
 - Gradient colors, theming
+- Config file

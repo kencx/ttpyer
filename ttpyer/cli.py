@@ -1,8 +1,8 @@
 import sys
 import argparse
 
-from ttpyer import Typer
-from ttpyer import RandomWordMode, TimedMode
+from ttpyer import Typer, TimedTyper
+from ttpyer import RandomWordMode, TimedMode, QuoteMode
 
 
 def number_check(n):
@@ -29,7 +29,7 @@ def cli(args=None):
         dest="num",
     )
     # timed quote mode?
-    parser.add_argument("-t", "--time", default=30, type=int, help="time (s)")
+    parser.add_argument("-t", "--time", type=int, help="time (s)")
     parser.add_argument("--quote", action="store_true", help="enable quote mode")
     parser.add_argument("-c", "--controls", action="store_true", help="show controls")
 
@@ -40,13 +40,17 @@ def run():
     parser = cli(sys.argv[1:])
 
     if parser.controls:
+        # show key bindings
         pass
+
+    elif parser.time:
+        typer = TimedTyper(TimedMode(time=int(parser.time)))
+        typer.start()
+
+    elif parser.quote:
+        typer = Typer(QuoteMode())
+        typer.start()
 
     elif parser.num:
         typer = Typer(RandomWordMode(limit=int(parser.num)))
         typer.start()
-
-    elif parser.time or parser.t:
-        pass
-        # typer = Typer(TimedMode())
-        # typer.start()
